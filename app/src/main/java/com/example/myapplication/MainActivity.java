@@ -31,11 +31,13 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements Observer<ArrayList<String>> {
@@ -47,7 +49,6 @@ public class MainActivity extends AppCompatActivity implements Observer<ArrayLis
     Xml xml=new Xml();
     ArrayList<String> urls=new ArrayList<>();
     EditText edt;
-    int id;
     ArrayList<String> idStr=new ArrayList<>();
     Handler handler=new Handler();
     int counter=0;
@@ -126,7 +127,35 @@ public class MainActivity extends AppCompatActivity implements Observer<ArrayLis
     {
         idStr.add(chNum);
 
-        handler.postDelayed(new Runnable() {
+        Observable.timer(5000, TimeUnit.MILLISECONDS)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribeOn(Schedulers.io())
+        .subscribe(new Observer<Long>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(Long aLong) {
+             //   idStr.add(chNum);
+                test(chNum);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        })
+        ;
+
+
+      /*  handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (idStr.size()!=0)
@@ -141,8 +170,25 @@ public class MainActivity extends AppCompatActivity implements Observer<ArrayLis
                     idStr.clear();
                 }
             }
-        },5000);
+        },5000);*/
     }
+
+    public void test(String a)
+    {
+        //idStr.add(a);
+        if (idStr.size()!=0)
+        {
+            String fId;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < idStr.size(); i++) {
+                sb.append(idStr.get(i));
+            }
+            fId=sb.toString();
+            setPlayer(Integer.parseInt(fId));
+            idStr.clear();
+        }
+    }
+
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
@@ -238,6 +284,9 @@ public class MainActivity extends AppCompatActivity implements Observer<ArrayLis
 
         return super.onKeyUp(keyCode, event);
     }
+
+
+
 
 
     @Override
