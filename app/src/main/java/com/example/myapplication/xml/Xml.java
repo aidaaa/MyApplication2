@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.myapplication.xml;
 
 //https://www.tutorialspoint.com/android/android_xml_parsers.htm
 
@@ -13,6 +13,7 @@ import org.w3c.dom.NodeList;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -24,12 +25,14 @@ import io.reactivex.ObservableOnSubscribe;
 public class Xml {
 
 
-    public Observable<ArrayList<String>> getObservableXml(String ip)
+    public Observable<List<ArrayList<String>>> getObservableXml(String ip)
     {
-        return Observable.create(new ObservableOnSubscribe<ArrayList<String>>() {
+        return Observable.create(new ObservableOnSubscribe<List<ArrayList<String>>>() {
             @Override
-            public void subscribe(ObservableEmitter<ArrayList<String>> emitter) throws Exception {
-                ArrayList<String> list=getXML(ip);
+            public void subscribe(ObservableEmitter<List<ArrayList<String>>> emitter) throws Exception {
+              //  ArrayList<String> urls=getXML(ip).get(0);
+              //  ArrayList<String> chName=getXML(ip).get(1);
+                List<ArrayList<String>> list=getXML(ip);
                 if (list!=null && !emitter.isDisposed())
                 {
                     emitter.onNext(list);
@@ -38,8 +41,10 @@ public class Xml {
                 else
                 {
                     //emitter.onError(new Exception());
-                    ArrayList<String> listE=new ArrayList<>();
-                    listE.add("error");
+                    List<ArrayList<String>>listE=new ArrayList<>();
+                    ArrayList<String> error=new ArrayList<>();
+                    error.add("error");
+                    listE.add(error);
                     emitter.onNext(listE);
                 }
             }
@@ -47,10 +52,12 @@ public class Xml {
     }
 
 
-    public static ArrayList<String> getXML(String ip) {
+    public static List<ArrayList<String>> getXML(String ip) {
 
         try {
+            List<ArrayList<String>> file=new ArrayList<>();
             ArrayList<String> urls = new ArrayList<>();
+            ArrayList<String> chNames = new ArrayList<>();
 
            InputStream input = new URL("http://"+ip+"/channels/channel.xml").openStream();
             //InputStream input=new URL("http://saatmedia.ir:3180/test/channels/channel.xml").openStream();
@@ -72,10 +79,14 @@ public class Xml {
                     Element element1 = (Element) node;
                     String url = getValue("url", element1);
                     urls.add(url);
+                    String chName=getValue("title",element1);
+                    chNames.add(chName);
                     System.out.println(url + "majid");
                 }
             }
-            return urls;
+            file.add(urls);
+            file.add(chNames);
+            return file;
         }
         catch (Exception e)
         {
@@ -90,4 +101,6 @@ public class Xml {
         Node node=nodeList.item(0);
         return node.getNodeValue();
     }
+
+
 }

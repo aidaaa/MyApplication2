@@ -1,7 +1,9 @@
-package com.example.myapplication;
+package com.example.myapplication.main;
 
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Bindable;
+
+import com.example.myapplication.BR;
 
 public class ViewModelMain extends BaseObservable
 {

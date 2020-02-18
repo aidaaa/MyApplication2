@@ -3,7 +3,7 @@
     <data>
         <variable
             name="config"
-            type="com.example.myapplication.ViewModelConfig" />
+            type="com.example.myapplication.confg.ViewModelConfig" />
     </data>
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="vertical"
@@ -11,9 +11,10 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ConfigActivity">
+        tools:context=".confg.ConfigActivity">
 
         <EditText
+
             android:text="@={config.ip}"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />

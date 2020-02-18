@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.myapplication.confg;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +7,8 @@ import android.view.View;
 
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Bindable;
+
+import com.example.myapplication.BR;
 
 public class ViewModelConfig extends BaseObservable
 {
