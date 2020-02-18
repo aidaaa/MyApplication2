@@ -99,20 +99,28 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
     {
         if (pos < urls.size())
         {
-            MediaSource mediaSource = null;
-            Uri uri = Uri.parse(urls.get(pos));
+            String str=urls.get(pos);
+            if (str=="")
+            {
+                Toast.makeText(this, "not find url", Toast.LENGTH_SHORT).show();
+                chNumber = "";
+                clearText();
+            }
+            else {
+                MediaSource mediaSource = null;
+                Uri uri = Uri.parse(urls.get(pos));
 
-            String titleText = chNames.get(pos);
-            title.setText(titleText);
+                String titleText = chNames.get(pos);
+                title.setText(titleText);
 
-            mediaSource = new ProgressiveMediaSource.Factory(daFactory).createMediaSource(uri);
+                mediaSource = new ProgressiveMediaSource.Factory(daFactory).createMediaSource(uri);
 
-            player_view.setPlayer(simpleExoPlayer);
-            simpleExoPlayer.prepare(mediaSource);
-            simpleExoPlayer.setPlayWhenReady(true);
-            chNumber="";
-            clearText();
-
+                player_view.setPlayer(simpleExoPlayer);
+                simpleExoPlayer.prepare(mediaSource);
+                simpleExoPlayer.setPlayWhenReady(true);
+                chNumber = "";
+                clearText();
+            }
 
             //simpleExoPlayer.getPlaybackState();
 
@@ -143,13 +151,13 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
         idStr.add(chNum);
         //edt.setText("");
 
-        if (urls.size()<10)
+        if (urls.size()<=10)
         {
             channelChange();
         }
 
         else {
-            Observable.timer(5000, TimeUnit.MILLISECONDS)
+            Observable.timer(3000, TimeUnit.MILLISECONDS)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(new Observer<Long>() {
@@ -427,9 +435,9 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
             urls = strings.get(0);
             chNames=strings.get(1);
             int len=urls.size();
-            if (len>=0 && len<10)
+            if (len>=0 && len<=10)
             edt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1)});
-            else if (len>=10 && len<100)
+            else if (len>10 && len<100)
                 edt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(2)});
         }
     }

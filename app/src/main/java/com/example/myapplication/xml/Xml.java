@@ -99,7 +99,14 @@ public class Xml {
     {
         NodeList nodeList=element.getElementsByTagName(tag).item(0).getChildNodes();
         Node node=nodeList.item(0);
-        return node.getNodeValue();
+        if (node==null)
+        {
+            return "";
+        }
+        else {
+            String a = node.getNodeValue();
+            return node.getNodeValue();
+        }
     }
 
 
