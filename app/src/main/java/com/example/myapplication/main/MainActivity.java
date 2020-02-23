@@ -9,7 +9,6 @@ import android.text.InputFilter;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +17,7 @@ import androidx.databinding.DataBindingUtil;
 
 import com.example.myapplication.R;
 import com.example.myapplication.confg.ConfigActivity;
+import com.example.myapplication.dagger.app.App;
 import com.example.myapplication.databinding.ActivityMainBinding;
 import com.example.myapplication.xml.Xml;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -36,19 +36,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
 import io.reactivex.Observable;
 import io.reactivex.Observer;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements Observer<List<ArrayList<String>>>{
 
     PlayerView player_view;
+
+    @Inject
     SimpleExoPlayer simpleExoPlayer;
+    @Inject
     DefaultTrackSelector trackSelector;
+    @Inject
     DataSource.Factory daFactory;
+    @Inject
+    SharedPreferences sharedPreferences;
+
     Xml xml=new Xml();
 
     ArrayList<String> urls=new ArrayList<>();
@@ -61,7 +71,11 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
     boolean shortPress=false;
     boolean longPress=false;
     String chNumber="";
-    
+
+    MediaSource mediaSource = null;
+    Uri uri;
+
+    CompositeDisposable compositeDisposable=new CompositeDisposable();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
         ActivityMainBinding binding= DataBindingUtil.setContentView(this, R.layout.activity_main);
         ViewModelMain viewModelMain=new ViewModelMain();
         binding.setMain(viewModelMain);
+
+        App.getApp().getDaggerComponent(this).getPlayer(this);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -82,11 +98,8 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
 
         title=binding.title;
 
-        trackSelector=new DefaultTrackSelector();
-        simpleExoPlayer= ExoPlayerFactory.newSimpleInstance(this,trackSelector);
-        daFactory=new DefaultHttpDataSourceFactory(Util.getUserAgent(this,"exoplayer"));
 
-        SharedPreferences sharedPreferences=getSharedPreferences("shared", Context.MODE_PRIVATE);
+        sharedPreferences=getSharedPreferences("shared", Context.MODE_PRIVATE);
         String ip=sharedPreferences.getString("ip","192.168.10.106");
 
         Observable<List<ArrayList<String>>> observable=xml.getObservableXml(ip);
@@ -102,13 +115,8 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
             String str=urls.get(pos);
             if (str=="")
             {
-                Toast.makeText(this, "not find url", Toast.LENGTH_SHORT).show();
-                chNumber = "";
-                clearText();
-            }
-            else {
-                MediaSource mediaSource = null;
-                Uri uri = Uri.parse(urls.get(pos));
+                Toast.makeText(this, "not find url", Toast.LENGTH_LONG).show();
+                uri = Uri.parse(urls.get(pos));
 
                 String titleText = chNames.get(pos);
                 title.setText(titleText);
@@ -117,6 +125,23 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
 
                 player_view.setPlayer(simpleExoPlayer);
                 simpleExoPlayer.prepare(mediaSource);
+
+                simpleExoPlayer.setPlayWhenReady(true);
+                chNumber = "";
+                clearText();
+            }
+
+            else {
+                uri = Uri.parse(urls.get(pos));
+
+                String titleText = chNames.get(pos);
+                title.setText(titleText);
+
+                mediaSource = new ProgressiveMediaSource.Factory(daFactory).createMediaSource(uri);
+
+                player_view.setPlayer(simpleExoPlayer);
+                simpleExoPlayer.prepare(mediaSource);
+
                 simpleExoPlayer.setPlayWhenReady(true);
                 chNumber = "";
                 clearText();
@@ -219,9 +244,15 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
         }
     }
 
-    public void clearText()
+    public DisposableObserver<Long> clearText()
     {
-        Observable.timer(5000,TimeUnit.MILLISECONDS)
+        DisposableObserver<Long> observer= Observable.just(1).timer(5000,TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(getObserver());
+        return observer;
+
+      /*  Observable.timer(5000,TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Long>() {
@@ -244,7 +275,32 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
                     public void onComplete() {
 
                     }
-                });
+                });*/
+    }
+
+    public DisposableObserver<Long> getObserver()
+    {
+        return new DisposableObserver<Long>() {
+            @Override
+            public void onNext(Long aLong) {
+                edt.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        };
+    }
+
+    public void dispose(DisposableObserver<Long> disposableObserver)
+    {
+        disposableObserver.dispose();
     }
 
     @Override
@@ -271,6 +327,7 @@ public class MainActivity extends AppCompatActivity implements Observer<List<Arr
                 {
                     int id=keyCode;
                     System.out.println(String.valueOf(id));
+                    dispose(clearText());
 
                     switch (keyCode)
                     {
